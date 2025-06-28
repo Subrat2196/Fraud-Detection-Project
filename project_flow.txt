@@ -1,4 +1,4 @@
--------------------------Setting up the project structure---------------------------
+-------------------------Step 1 - Setting up the project structure---------------------------
 
 1. Create repo, clone it in local
 2. Create a virtual environment named 'atlas' - conda create -n atlas python=3.10
@@ -8,3 +8,14 @@
 6. Rename src.models -> src.model
    copy the provided requirements.txt file and do "pip install -r requirements.txt"
 7. git add - commit - push
+
+-------------------------Step 2 - Setup MLFlow on Dagshub---------------------------
+
+8. Go to: https://dagshub.com/dashboard
+9. Create > New Repo > Connect a repo > (Github) Connect > Select your repo > Connect
+10. Copy experiment tracking url and code snippet. (Also try: Go To MLFlow UI)
+
+11. pip install dagshub & mlflow
+12. Run the exp notebooks
+13. git add - commit - push
+

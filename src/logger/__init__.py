@@ -22,7 +22,7 @@ log_file_path = os.path.join(log_dir_path, LOG_FILE)
 def configure_logging():
     """Configure logging for the application."""
     # create a custom logger
-    logger = logging.getlogger()
+    logger = logging.getLogger()
     logger.setLevel(logging.DEBUG)
 
     # define formatter

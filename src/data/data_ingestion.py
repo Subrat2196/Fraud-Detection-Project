@@ -30,7 +30,7 @@ def save_data(df: pd.DataFrame, save_dir: str) -> None:
 
 def main():
     try:
-        df = load_data('notebooks/creditcard_resampled.csv')
+        df = load_data('notebooks/creditcard.csv')
         save_data(df, 'data/')
     except Exception as e:
         logging.error(f"An error occurred during data ingestion: {e}")

@@ -33,21 +33,11 @@ def preprocess_data(df: pd.DataFrame) -> pd.DataFrame:
         df.fillna(df.median(), inplace=True)
         logging.info("Missing values handled.")
 
-        # Scale features using PowerTransformer
-        scaler = PowerTransformer()
-        X = df.drop(columns='Class', axis=1)
-        y = df['Class']
-        X_scaled = scaler.fit_transform(X)
-        logging.info("Features scaled using PowerTransformer.")
-
-        # Create a new DataFrame with scaled features
-        df_scaled = pd.DataFrame(X_scaled, columns=X.columns)
-        df_scaled['Class'] = y.values
 
         # Handle class imbalance
-        majority_class = df_scaled[df_scaled['Class'] == 0]
-        minority_class = df_scaled[df_scaled['Class'] == 1]
-
+        majority_class = df[df['Class'] == 0]
+        minority_class = df[df['Class'] == 1]
+        logging.info(f"Majority class shape: {majority_class.shape}, Minority class shape: {minority_class.shape}")
         # downsample majority class
         majority_downsampled = resample(majority_class,
                                       replace=True,

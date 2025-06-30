@@ -1,66 +1,50 @@
-import json
 import os
 import pickle
 import logging
 import numpy as np
-import pandas as pd
-import mlflow
-import dagshub
 from flask import Flask, render_template, request
-from prometheus_client import Counter, Histogram, generate_latest, CollectorRegistry, CONTENT_TYPE_LATEST
-import time
 import sys
+
+# Setup logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+# Extend sys path to access src.logger if needed
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
-from src.logger import logging
+from src.logger import logging  # Optional: use your custom logger
 
-mlflow_tracking_uri = os.getenv("MLFLOW_TRACKING_URI")
-if not mlflow_tracking_uri:
-    raise EnvironmentError("MLFLOW_TRACKING_URI environment variable is not set")
-mlflow.set_tracking_uri(mlflow_tracking_uri)
-dagshub.init(repo_owner="bahuguna.subrat211996", repo_name="model_evaluation_repo", mlflow=True)
-
-# Configuration
-MODEL_INFO_PATH = "reports/experiment_info.json"
+# ------------------- Configuration -------------------
+MODEL_PATH = "models/latest_random_forest_model.pkl"
 PREPROCESSOR_PATH = "models/power_transformer.pkl"
+FEATURE_NAMES = ["Time"] + [f"V{i}" for i in range(1, 29)] + ["Amount"]
 
-# Initialize Flask app
-app = Flask(__name__)
-
-# Custom Metrics for Monitoring
-registry = CollectorRegistry()
-REQUEST_COUNT = Counter("app_request_count", "Total requests", ["method", "endpoint"], registry=registry)
-REQUEST_LATENCY = Histogram("app_request_latency_seconds", "Latency of requests", ["endpoint"], registry=registry)
-PREDICTION_COUNT = Counter("model_prediction_count", "Count of predictions", ["prediction"], registry=registry)
-
-# Load latest model using stored run_id from local json
-def load_latest_model_from_local():
+# ------------------- Load Components -------------------
+def load_model(model_path):
     try:
-        with open(MODEL_INFO_PATH, 'r') as f:
-            model_info = json.load(f)
-        model_uri = f"runs:/{model_info['run_id']}/{model_info['model_path']}"
-        logging.info(f"Loading model from URI: {model_uri}")
-        return mlflow.pyfunc.load_model(model_uri)
+        with open(model_path, "rb") as f:
+            model = pickle.load(f)
+        logging.info("Model loaded from local path.")
+        return model
     except Exception as e:
-        logging.error(f"Failed to load latest model: {e}")
+        logging.error(f"Error loading model: {e}")
         return None
-
 
 def load_preprocessor(preprocessor_path):
     try:
         with open(preprocessor_path, "rb") as f:
-            return pickle.load(f)
+            transformer = pickle.load(f)
+        logging.info("Transformer loaded from local path.")
+        return transformer
     except Exception as e:
-        logging.error(f"Error loading PowerTransformer: {e}")
+        logging.error(f"Error loading transformer: {e}")
         return None
 
-# Load ML components
-model = load_latest_model_from_local()
+model = load_model(MODEL_PATH)
 power_transformer = load_preprocessor(PREPROCESSOR_PATH)
 
-# Feature names for the dataset
-FEATURE_NAMES = ["Time"] + [f"V{i}" for i in range(1, 29)] + ["Amount"]
+# ------------------- Flask App -------------------
+app = Flask(__name__)
 
-# Helper Functions
 def preprocess_input(data):
     try:
         input_array = np.array(data).reshape(1, -1)
@@ -69,11 +53,8 @@ def preprocess_input(data):
         logging.error(f"Preprocessing Error: {e}")
         return None
 
-# Routes
 @app.route("/", methods=["GET", "POST"])
 def home():
-    REQUEST_COUNT.labels(method="GET", endpoint="/").inc()
-    start_time = time.time()
     prediction = None
     input_values = [""] * len(FEATURE_NAMES)
 
@@ -81,13 +62,13 @@ def home():
         csv_input = request.form.get("csv_input", "").strip()
         if csv_input:
             try:
-                values = list(map(float, csv_input.split(","))) # put the comma seperated values in a list
+                values = list(map(float, csv_input.split(",")))
                 if len(values) != len(FEATURE_NAMES):
-                    raise ValueError(f"Expected {len(FEATURE_NAMES)} values, but got {len(values)}") # checking same values provided as the number of columns
+                    raise ValueError(f"Expected {len(FEATURE_NAMES)} values, but got {len(values)}")
                 input_values = values
-                transformed = preprocess_input(input_values) # Transforming/ Power Scaler applied to values
+                transformed = preprocess_input(input_values)
                 if transformed is not None and model:
-                    result = model.predict(transformed) # Predicting the value
+                    result = model.predict(transformed)
                     prediction = "Fraud" if result[0] == 1 else "Non-Fraud"
                 else:
                     prediction = "Error: Model or Transformer not loaded properly."
@@ -96,11 +77,11 @@ def home():
             except Exception as e:
                 prediction = f"Processing Error: {e}"
 
-    return render_template("index.html", result=prediction, csv_input=",".join(map(str, input_values))) # rendering the file
+    return render_template("index.html", result=prediction, csv_input=",".join(map(str, input_values)))
 
-@app.route("/predict", methods=["POST"]) # when we press the predict button
+@app.route("/predict", methods=["POST"])
 def predict():
-    csv_input = request.form.get("csv_input", "").strip() # capturing here the values that user enters , strip to seperate the values
+    csv_input = request.form.get("csv_input", "").strip()
     if not csv_input:
         return "Error: No input provided."
 
@@ -118,4 +99,4 @@ def predict():
         return f"Error processing input: {e}"
 
 if __name__ == "__main__":
-    app.run(debug=True, host="0.0.0.0", port=5000)
+    app.run(debug=True, use_reloader=False, host="0.0.0.0", port=5000)

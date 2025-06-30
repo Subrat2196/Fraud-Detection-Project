@@ -52,6 +52,16 @@ def train_model(X_train: np.ndarray,y_train: np.ndarray) -> RandomForestClassifi
         logging.error(f"Error in training model: {e}")
         sys.exit(1)
 
+def save_power_transformer(transformer, file_path: str) -> None:
+    """Save the trained PowerTransformer to a file."""
+    try:
+        with open(file_path, 'wb') as file:
+            pickle.dump(transformer, file)
+        logging.info('PowerTransformer saved to %s', file_path)
+    except Exception as e:
+        logging.error('Error occurred while saving the PowerTransformer: %s', e)
+        raise
+
 
 def save_model(model: RandomForestClassifier, model_dir_path: str) -> None:
     try:
@@ -70,16 +80,23 @@ def main():
         X_train = train_data.drop(columns='Class', axis=1).values # We are taking .values to convert the DataFrame to a numpy array
         y_train = train_data['Class'].values # Since we are using RandomForestClassifier which takes numpy array as input
 
+        power_transformer = PowerTransformer()
+        X_train_transformed = power_transformer.fit_transform(X_train)
 
         # Train the model
         model = train_model(X_train, y_train)
 
+        # save power transformer
+        save_power_transformer(power_transformer, 'models/power_transformer.pkl')
+        
         # Save the model
         save_model(model, './models/random_forest_model.pkl')
         logging.info("✅ Model training pipeline completed successfully.")
     except Exception as e:
         logging.error(f"An error occurred during model training: {e}")
         raise
+        
+        
 
 if __name__ == "__main__":
     main()

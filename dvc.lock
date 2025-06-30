@@ -62,8 +62,8 @@ stages:
       nfiles: 2
     - path: src/model/model_building.py
       hash: md5
-      md5: 8d716085972e827c25f51077ead73ba6
-      size: 3194
+      md5: bd8965a098064a45cc4de42d1a80ec33
+      size: 3874
     params:
       params.yaml:
         model.params.max_depth: 10

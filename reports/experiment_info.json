@@ -1,4 +1,4 @@
 {
-    "run_id": "e62375a9b9b84c57898ad0951f0b1cbc",
-    "model_path": "model"
+    "run_id": "0132746838a643b88d166b62b8617200",
+    "model_path": "model/random_forest_model.pkl"
 }

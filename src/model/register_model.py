@@ -1,79 +1,61 @@
-import json
 import os
-import pickle
-import dagshub
-import mlflow.tracking
-import mlflow.tracking.client
-import numpy as np
-import pandas as pd
-import mlflow
 import sys
+import json
+import mlflow
+import dagshub
 from dotenv import load_dotenv
+
 # Add the project root directory to sys.path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
 from src.logger import logging
-import yaml
-import logging
 
-
+# Load environment variables
+load_dotenv(override=True)
 mlflow_tracking_uri = os.getenv('MLFLOW_TRACKING_URI')
 if not mlflow_tracking_uri:
     logging.error("MLFLOW_TRACKING_URI environment variable is not set.")
     raise ValueError("MLFLOW_TRACKING_URI environment variable is not set.")
 
+# Set MLflow tracking URI and initialize DagsHub
 mlflow.set_tracking_uri(mlflow_tracking_uri)
 dagshub.init(repo_owner='bahuguna.subrat211996', repo_name='model_evaluation_repo', mlflow=True)
 
 def load_model_info(file_path: str) -> dict:
-    '''load model info from json file , jo humne run_id aur model path save kia tha'''
+    """Load model info from JSON file (contains run_id and model_path)."""
     try:
-        with open(file_path,'r') as file:
+        with open(file_path, 'r') as file:
             model_info = json.load(file)
-        logging.debug('Model info loaded from %s', file_path)
+        logging.info(f"✅ Model info loaded from {file_path}")
         return model_info
     except FileNotFoundError:
-        logging.error('File not found: %s', file_path)
+        logging.error(f"❌ Model info file not found: {file_path}")
         raise
     except Exception as e:
-        logging.error('Unexpected error occurred while loading the model info: %s', e)
+        logging.error(f"❌ Unexpected error while loading model info: {e}")
         raise
 
 def register_model(model_name: str, model_info: dict):
-    '''register model to mlflow registry'''
+    """
+    Simulate model registration by printing model URI.
+    DagsHub does not support MLflow model registry APIs.
+    """
     try:
-        client = mlflow.tracking.MlflowClient()
-
-        # Register the model
         model_uri = f"runs:/{model_info['run_id']}/{model_info['model_path']}"
-        logging.info(model_uri)
-        model_version = mlflow.register_model(model_uri, model_name) 
-        # Create a new model version in model registry for the model files specified by model_uri.
-        # we will give the model a name for it to register
-
-        # Transition Model to "Staging"
-
-        client.transition_model_version_stage(
-            name=model_name,
-            version=model_version.version, # out of the versions in the model_version , get the latest one
-            stage="Staging" # Directly putting our model to staging area
-        )
-        logging.debug(f'Model {model_name} version {model_version.version} registered and transitioned to Staging.')
-
+        logging.info(f"Model URI: {model_uri}")
+        logging.warning("DagsHub does not support MLflow model registry APIs. Skipping formal registration.")
+        print(f"🔗 Track your model at: {model_uri}")
     except Exception as e:
-        logging.error('Error during model and transformer registration: %s', e)
+        logging.error(f"❌ Error during model URI logging: {e}")
         raise
 
 def main():
     try:
         model_info_path = 'reports/experiment_info.json'
         model_info = load_model_info(model_info_path)
-
         model_name = "my_model"
-
         register_model(model_name, model_info)
-        
     except Exception as e:
-        logging.error('Failed to complete the model registration process: %s', e)
+        logging.error(f"Failed to complete model URI logging: {e}")
         print(f"Error: {e}")
 
 if __name__ == '__main__':

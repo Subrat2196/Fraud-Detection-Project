@@ -112,11 +112,17 @@ def main():
                     mlflow.log_param(param_name, param_value)
 
             # Save model as plain artifact (DagsHub safe)
-            with tempfile.TemporaryDirectory() as temp_dir:
-                model_file = os.path.join(temp_dir, "random_forest_model.pkl")
-                with open(model_file, "wb") as f:
-                    pickle.dump(model, f)
-                mlflow.log_artifact(model_file, artifact_path="model")
+            # Define path to save latest model
+            model_save_path = "./models/latest_random_forest_model.pkl"
+
+            # Save model locally
+            with open(model_save_path, "wb") as f:
+                pickle.dump(model, f)
+            logging.info(f"Model saved to local path: {model_save_path}")
+
+            # Log to MLflow (DagsHub)
+            mlflow.log_artifact(model_save_path, artifact_path="model")
+
 
             # Save model info + log artifacts
             save_model_info(run.info.run_id, "model/random_forest_model.pkl", 'reports/experiment_info.json')

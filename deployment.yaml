@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fraud-detect-app
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: fraud-detect-app
+  template:
+    metadata:
+      labels:
+        app: fraud-detect-app
+    spec:
+      containers:
+      - name: fraud-detect-app
+        image: 205498862108.dkr.ecr.us-east-1.amazonaws.com/fraud-detect-repo:latest
+        ports:
+        - containerPort: 5000
+        resources:
+          limits:
+            memory: "256Mi"
+            cpu: "250m"
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+        
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: fraud-detect-service
+spec:
+  selector:
+    app: fraud-detect-service
+  spec:
+    type: LoadBalancer
+  ports:
+  - name: http
+    protocol: TCP
+    port: 5000
+    targetPort: 5000

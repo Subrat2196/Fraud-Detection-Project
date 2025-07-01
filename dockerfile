@@ -11,7 +11,10 @@ RUN pip install -r requirements.txt
 
 EXPOSE 5000
 
-CMD ["python", "app.py"]
+# CMD ["python", "app.py"]  -> this is used for local use
 
+# When we are going for eks scaled deployment , we will need below command
+
+CMD ["gunicorn","--bind","0.0.0.0:5000","--timeout","120","app:app"]
 
 

@@ -11,14 +11,31 @@ from src.logger import logging
 
 # Load environment variables
 load_dotenv(override=True)
-mlflow_tracking_uri = os.getenv('MLFLOW_TRACKING_URI')
-if not mlflow_tracking_uri:
-    logging.error("MLFLOW_TRACKING_URI environment variable is not set.")
-    raise ValueError("MLFLOW_TRACKING_URI environment variable is not set.")
+# mlflow_tracking_uri = os.getenv('MLFLOW_TRACKING_URI')
+# if not mlflow_tracking_uri:
+#     logging.error("MLFLOW_TRACKING_URI environment variable is not set.")
+#     raise ValueError("MLFLOW_TRACKING_URI environment variable is not set.")
 
-# Set MLflow tracking URI and initialize DagsHub
-mlflow.set_tracking_uri(mlflow_tracking_uri)
-dagshub.init(repo_owner='bahuguna.subrat211996', repo_name='model_evaluation_repo', mlflow=True)
+# # Set MLflow tracking URI and initialize DagsHub
+# mlflow.set_tracking_uri(mlflow_tracking_uri)
+# dagshub.init(repo_owner='bahuguna.subrat211996', repo_name='model_evaluation_repo', mlflow=True)
+
+# Below code block is for production use
+# -------------------------------------------------------------------------------------
+# Set up DagsHub credentials for MLflow tracking
+dagshub_token = os.getenv("DAGSHUB_TOKEN") # it will get from ci.yamls
+if not dagshub_token:
+    raise EnvironmentError("CAPSTONE_TEST environment variable is not set")
+
+os.environ["MLFLOW_TRACKING_USERNAME"] = dagshub_token
+os.environ["MLFLOW_TRACKING_PASSWORD"] = dagshub_token
+
+dagshub_url = "https://dagshub.com"
+repo_owner = "bahuguna.subrat211996"
+repo_name = "model_evaluation_repo"
+
+# Set up MLflow tracking URI
+mlflow.set_tracking_uri(f'{dagshub_url}/{repo_owner}/{repo_name}.mlflow')
 
 def load_model_info(file_path: str) -> dict:
     """Load model info from JSON file (contains run_id and model_path)."""

@@ -25,6 +25,8 @@
 15. create a local folder as "local_s3" (temporary work)
 16. on terminal - "dvc remote add -d mylocal local_s3"
 
+------------------------- Step 4 - Create the dvc pipeline components -------------------------
+
 17. Add code to below files/folders inside src dir:
     - logger
     - data_ingestion.py
@@ -39,4 +41,26 @@
 21. Once do - dvc status
 22. git add - commit - push
 
+--------------------------- Step 4 - Connect with AWS for this ---------------------
 
+23. Need to add S3 as remote storage - Create IAM User(keep cred) and S3 bucket
+24. pip install - dvc[s3] & awscli
+25. Checking/deleting dvc remote (optional) - [dvc remote list & dvc remote remove <name>] 
+26. Set aws cred - aws configure
+27. Add s3 as dvc remote storage - dvc remote add -d myremote s3://learnyard-proj1-bucket
+
+
+----------------------------- Step 5 - Create flask app ----------------------------
+
+28. Create new dir - flask_app | Inside that, add rest of the files and dir
+29. pip install flask and run the app (dvc push - to push data to S3)
+
+
+------------------------------ Step 6 - Create CI pipeline with Github Actions ----------------
+
+30. pip freeze > requirements.txt
+31. Add .github/workflows/ci.yaml file
+31.2. Create key token on Dagshub for auth: Go to dagshub repo > Your settings > Tokens > Generate new token
+    >> Please make sure to save token << >> capstone_test: <token here> <<
+    >> Add this auth token to github secret&var and update on ci file
+31.3 -> Add Unit tests like model_test.py, model_to_production.py, flask_app_test.py

@@ -37,7 +37,36 @@ jobs:
           echo "S3_BUCKET_NAME=${{ secrets.S3_BUCKET_NAME }}" >> $GITHUB_ENV
           echo "MLFLOW_TRACKING_URI=${{ secrets.MLFLOW_TRACKING_URI }}" >> $GITHUB_ENV
           echo "DAGSHUB_TOKEN=${{ secrets.DAGSHUB_TOKEN }}" >> $GITHUB_ENV
+          
 
       - name: run Pipeline
         run: |
           dvc repro 
+
+      - name: login to AWS ECR
+        if: success()
+        run: |
+            aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY }}
+            aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_KEY }}
+            aws configure set region ${{ secrets.AWS_REGION }}
+            aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
+
+      - name: Build Docker image
+        run: |
+            docker build -t ${{ secrets.AWS_ECR_REPO }}:latest .
+
+      - name: Tag Docker image
+        run: |
+            docker tag ${{ secrets.AWS_ECR_REPO }}:latest \
+            ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.AWS_ECR_REPO }}:latest
+
+    
+      - name: Check Docker Authentication
+        run: docker info
+
+      - name: Push Docker image to ECR
+        run: |
+          docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.AWS_ECR_REPO }}:latest
+
+
+      

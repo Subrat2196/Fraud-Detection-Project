@@ -4,15 +4,9 @@ import logging
 import numpy as np
 from flask import Flask, render_template, request
 import sys
-
-# Setup logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
-
-# Extend sys path to access src.logger if needed
+import mlflow
+# Add the project root directory to sys.path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
-from src.logger import logging  # Optional: use your custom logger
-
 # ------------------- Configuration -------------------
 MODEL_PATH = "models/latest_random_forest_model.pkl"
 PREPROCESSOR_PATH = "models/power_transformer.pkl"

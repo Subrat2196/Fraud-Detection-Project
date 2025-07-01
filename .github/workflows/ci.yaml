@@ -1,0 +1,35 @@
+name: CI Pipeline 
+# name of the workflow
+
+on: push 
+# trigger the workflow whenever there is a git push in this branch 
+
+# the jobs that will be run when the workflow is triggered
+jobs:
+  project-testing: # id of the job
+    runs-on: ubuntu-latest # virtual machine where job will be run
+
+    steps:
+      - name: checkout code # take the code to the remote Github actions server
+        uses: actions/checkout@v3 
+
+      - name: setup python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.10'
+
+      - name: Cache pip dependencies # speeds up the workflow by caching pip-installed packages
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: install dependencies
+        run: |
+          pip install -r requirements.txt
+        
+      - name: run Pipeline
+        run: |
+          dvc repro 

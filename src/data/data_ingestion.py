@@ -33,7 +33,7 @@ def save_data(df: pd.DataFrame, save_dir: str) -> None:
 def main():
     try:
         # Replace these with your actual AWS credentials and S3 details
-        bucket_name = os.getenv('BUCKET_NAME')
+        bucket_name = os.getenv('S3_BUCKET_NAME')
         aws_access_key = os.getenv('AWS_ACCESS_KEY')
         aws_secret_key = os.getenv('AWS_SECRET_KEY')
         FILE_KEY = "creditcard.csv"  # Path inside S3 bucket

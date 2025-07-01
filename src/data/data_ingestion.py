@@ -1,7 +1,7 @@
 import os
 import pandas as pd
 import sys
-
+from src.connections import s3_connections
 # Add the project root directory to sys.path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
 from src.logger import logging
@@ -30,7 +30,15 @@ def save_data(df: pd.DataFrame, save_dir: str) -> None:
 
 def main():
     try:
-        df = load_data('notebooks/creditcard.csv')
+        # Replace these with your actual AWS credentials and S3 details
+        bucket_name = ''
+        aws_access_key = ""
+        aws_secret_key = ""
+        FILE_KEY = "creditcard.csv"  # Path inside S3 bucket
+
+        s3 = s3_connections.s3_operations(bucket_name, aws_access_key, aws_secret_key)
+        df = s3.fetch_file_from_s3(FILE_KEY)
+        # df = load_data('notebooks/creditcard.csv')
         save_data(df, 'data/')
     except Exception as e:
         logging.error(f"An error occurred during data ingestion: {e}")
